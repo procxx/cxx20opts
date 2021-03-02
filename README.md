@@ -26,9 +26,11 @@ obj.raw() -> std::pair<int, char**> /* or concept pair, default usage - std::pai
 ```cpp
 options.add_option(option{}).add_option({});
 
-// or options.option(option{})
+// or
+options.option(option{});
 
-// or options.option(option{}
+// or
+options.option(option{}
 | option{}
 | option{}
 | option{}
