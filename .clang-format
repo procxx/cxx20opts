@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+ColumnLimit: '100'
+IndentWidth: '4'
+TabWidth: '4'
+AccessModifierOffset: '-4'
+NamespaceIndentation: All
+MaxEmptyLinesToKeep: '4'
+UseTab: Never
+SortIncludes: false 
+
