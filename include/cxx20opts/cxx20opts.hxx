@@ -15,14 +15,17 @@
 
 #include <memory>
 #include <string_view>
+#include <string>
 #include <optional>
-
+#include <unordered_set>
+#include <stdexcept>
+#include <ostream>
 
 #ifdef cxx20opts_has_concepts
 
-//#if __has_include(<concepts>)
-//#include <concepts>
-//#endif
+#if __has_include(<concepts>)
+#include <concepts>
+#endif
 
 // TODO: unimplemented
 namespace cxx20opts::concepts {
@@ -77,52 +80,21 @@ namespace cxx20opts::concepts {
 
 namespace cxx20opts {
 
-    namespace intrusive {
-
-        /*
-         * @bref lightweight intrusive wrapper
-         */
-        template <class T, class U>
-        class pair {
-        public:
-            constexpr pair(T& t_, U& u_) noexcept : t{t_}, u{u_} {}
-            constexpr pair(pair& p) noexcept : t{p.t}, u{p.u} {}
-            constexpr pair(pair&& p) noexcept : t{p.t}, u{p.u} {}
-            constexpr pair operator=(pair& p) noexcept {
-                if (&p not_eq this) {
-                    p.t = t;
-                    p.u = u;
-                }
-                return *this;
-            }
-            constexpr pair operator=(pair&& p) noexcept {
-                if (&p not_eq this) {
-                    p.t = t;
-                    p.u = u;
-                }
-                return *this;
-            }
-
-            constexpr auto first() noexcept -> T& { return t; }
-            constexpr auto second() noexcept -> U& { return u; }
-            constexpr auto first() const noexcept -> T& { return t; }
-            constexpr auto second() const noexcept -> U& { return u; }
-
-        private:
-            T& t;
-            U& u;
-        };
-
-    }  // namespace intrusive
+    namespace detial {
+        constexpr static inline std::string_view separator = "-";
+        constexpr static inline std::string_view double_separator = "--";
+        constexpr static inline std::string_view windows_separator = "/";
+    }  // namespace detial
 
 
     struct option {  // def impl, in development
-    public:
-        std::optional<std::string> short_name{std::nullopt};
-        std::string name{};
-        std::string description{};
+        std::optional<std::string_view> short_name{std::nullopt};
+        std::optional<std::string_view> name{std::nullopt};
+        std::optional<std::string_view> description{std::nullopt};
     };
 
+
+#ifdef cxx20opts_has_concepts
     //         option(concepts::string_observer auto /*str*/) {}
     // move this to ctor args / to template parametr, with default - str view?
     //        concepts::string_observer auto name;
@@ -130,87 +102,120 @@ namespace cxx20opts {
     //        concepts::custom_optional_type<concepts::custom_string_type> auto description;
 
     //    static_assert(concepts::option<option>);
+#endif
+
+    struct raw_args {
+        int argc;
+        char** argv;
+    };
+
+    struct enable_windows_like_argument_t {};
+    struct disable_windows_like_argument_t {};
+
+    constexpr static inline enable_windows_like_argument_t enable_windows_like_argument{};
+    constexpr static inline disable_windows_like_argument_t disable_windows_like_argument{};
+
 
     class options {
     public:
         using count_t = int;
-        using raw_args_t = intrusive::pair<int, char**>;
+        using raw_args_t = raw_args;
 
-        constexpr options(count_t argc_, char** argv_) noexcept
-            : argc{argc_}, argv{argv_}, raw_{argc, argv} {}
+        options() noexcept {}
+        options(const count_t argc_, char** argv_) noexcept
+            : argc{argc_}, argv{argv_}, raw_{argc, argv} {
+            parse_impl();
+        }
 
+        auto parse(const count_t argc_, char** argv_) noexcept -> options&;
+        auto enable_windows_like_argument() noexcept -> options&;
+        auto disable_windows_like_argument() noexcept -> options&;
         auto operator()(const option&) -> options&;
         auto operator()(option&&) noexcept -> options&;
-        auto operator|(const option&) -> options&;
-        auto operator|(option&&) noexcept -> options&;
         auto add(const option&) -> options&;
         auto add(option&&) noexcept -> options&;
 
-        auto operator[](count_t) const noexcept -> std::string_view;
+        auto operator[](const count_t) const noexcept -> std::string_view;
         auto operator[](std::string_view) const noexcept -> std::string_view;
 
-        auto at(count_t) const -> std::string_view;          /* throws std::out_of_range */
+        auto at(const count_t) const -> std::string_view;    /* throws std::out_of_range */
         auto at(std::string_view) const -> std::string_view; /* throws std::out_of_range */
 
-        constexpr auto raw() const noexcept -> const raw_args_t&;
+        auto raw() const noexcept -> const raw_args_t&;
 
     private:
+        bool enabled_windows_like_argument_opts{false};
         int argc;
         char** argv;
         raw_args_t raw_;
+
+
+        auto parse_impl() noexcept -> void;
     };
 
-    //        auto operator[](concepts::string_observer auto str) const noexcept ->
-    //        std::string_view;
+#ifdef cxx20opts_has_concepts
+    //    auto operator[](concepts::string_observer auto str) const noexcept -> std::string_view;
+#endif
+
+
+    inline auto options::parse(const options::count_t argc_, char** argv_) noexcept -> options& {
+        argc = argc_;
+        argv = argv_;
+        raw_ = raw_args_t{argc_, argv_};
+        parse_impl();
+        return *this;
+    }
+
+    inline auto options::enable_windows_like_argument() noexcept -> options& {
+        enabled_windows_like_argument_opts = true;
+        return *this;
+    }
+    inline auto options::disable_windows_like_argument() noexcept -> options& {
+        enabled_windows_like_argument_opts = false;
+        return *this;
+    }
 
     inline auto options::operator()(option&& o) noexcept -> options& {
         // TODO: unimplemented
+
         (void)(o);
         return *this;
     }
     inline auto options::operator()(const option& o) -> options& {
         // TODO: unimplemented
-        (void)(o);
-        return *this;
-    }
 
-    inline auto options::operator|(option&& o) noexcept -> options& {
-        // TODO: unimplemented
-        (void)(o);
-        return *this;
-    }
-    inline auto options::operator|(const option& o) -> options& {
-        // TODO: unimplemented
         (void)(o);
         return *this;
     }
 
     inline auto options::add(option&& o) noexcept -> options& {
         // TODO: unimplemented
+
         (void)(o);
         return *this;
     }
     inline auto options::add(const option& o) -> options& {
         // TODO: unimplemented
+
         (void)(o);
         return *this;
     }
 
 
     // unchecked method
-    inline auto options::operator[](options::count_t n) const noexcept -> std::string_view {
+    inline auto options::operator[](const options::count_t n) const noexcept -> std::string_view {
         return {argv[n]};
     }
 
     inline auto options::operator[](std::string_view str) const noexcept -> std::string_view {
         // TODO: unimplemented
+
         (void)(str);
         return {"unimplemented"};
     }
 
-
     /* throws std::out_of_range */
-    inline auto options::at(options::count_t n) const -> std::string_view {
+    inline auto options::at(const options::count_t n) const -> std::string_view {
         if (n > argc) {
             throw std::out_of_range("");
         }
@@ -218,12 +223,49 @@ namespace cxx20opts {
     }
 
     /* throws std::out_of_range */
-    inline auto options::at(std::string_view) const -> std::string_view {
+    inline auto options::at(std::string_view str) const -> std::string_view {
         // TODO: unimplemented
+
+        (void)(str);
         return {"unimplemented"};
     }
 
-    constexpr inline auto options::raw() const noexcept -> const raw_args_t& { return raw_; }
+    inline auto options::raw() const noexcept -> const raw_args_t& {
+        //
+        return raw_;
+    }
+
+    inline auto options::parse_impl() noexcept -> void {
+        // TODO: unimplemented
+    }
+
+
+
+    inline auto operator|(options& z, option&& o) noexcept -> options& {
+        z.add(std::move(o));
+        return z;
+    }
+    inline auto operator|(options& z, const option& o) -> options& {
+        z.add(o);
+        return z;
+    }
+
+    inline auto operator|(options& z, enable_windows_like_argument_t&&) noexcept -> options& {
+        z.enable_windows_like_argument();
+        return z;
+    }
+    inline auto operator|(options& z, const enable_windows_like_argument_t&) noexcept -> options& {
+        z.enable_windows_like_argument();
+        return z;
+    }
+    inline auto operator|(options& z, disable_windows_like_argument_t&&) noexcept -> options& {
+        z.disable_windows_like_argument();
+        return z;
+    }
+    inline auto operator|(options& z, const disable_windows_like_argument_t&) noexcept -> options& {
+        z.disable_windows_like_argument();
+        return z;
+    }
 
 
 }  // namespace cxx20opts

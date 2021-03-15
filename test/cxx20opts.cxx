@@ -4,6 +4,9 @@
 #include <limits>
 #include <algorithm>
 #include <iterator>
+#include <cassert>
+#include <iostream>
+
 
 using namespace cxx20opts;
 
@@ -110,19 +113,31 @@ constinit auto run_tests_for_tests = tests_for_tests();
 
 int main(int argc, char* argv[] /* this is vla? */) {
     cxx20opts::options opts{argc, argv};
-    opts.add(option{.short_name = "-h", .name = "help", .description = "Print help"});
-    opts | option{.short_name = "f", .name = "file", .description = "Path to Some File"} |
-        option{.name = "verbose", .description = "verbose output"} |
-        option{.short_name = "o", .name = "output", .description = "output file"} |
-        option{.name = "version", .description = "show app version"};
 
-    opts({.name = "kek", .description = "lol"})({})({})({});  // упрлся
+    opts.add(option{.short_name = "-h", .name = "help", .description = "Print help"});
+
+    opts | option{.short_name = "f", .name = "file", .description = "Path to Some File"}  //
+        | option{.name = "verbose", .description = "verbose output"}                      //
+        | option{.short_name = "o", .name = "output", .description = "output file"}       //
+        | option{.name = "version", .description = "show app version"};                   //
+
+    opts | enable_windows_like_argument | disable_windows_like_argument |
+        enable_windows_like_argument;
+
+    option x{.name = " ", .description = " "};
+    //    x.defautl_value<std::string_view>(""); // not implemented.
+
+    opts.add(x);             // copy
+    opts.add(std::move(x));  // move
+
+    opts(option{.name = "kek", .description = "lol"})({})({})({});  // упрлся
 
     opts["kecasdak"];                          // unchecked UB, out of range, ubsan не ловит
     opts["v"], opts["version"];                // semantically equivalent
     opts.at("K"), opts.at("ADKFJDASKJFADHA");  // throws exception - out of range
-    opts.raw().first();                        // get argc
-    opts.raw().second();                       // get argv
+    assert(opts.raw().argc == argc);           // get argc
+    assert(opts.raw().argv == argv);           // get argv
+
 
     return 0;
 }

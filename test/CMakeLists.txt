@@ -44,4 +44,4 @@ foreach(i ${test_list})
 endforeach()
 
 target_compile_features(cxx20opts.cxx.test PUBLIC cxx_std_20)
-target_compile_features(cxx17opts.cxx.test PUBLIC cxx_std_20) # cxx_std_17
+target_compile_features(cxx17opts.cxx.test PUBLIC cxx_std_17) # cxx_std_17
