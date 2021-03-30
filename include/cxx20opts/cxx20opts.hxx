@@ -20,6 +20,7 @@
 #include <unordered_set>
 #include <stdexcept>
 #include <ostream>
+#include <vector>
 
 #ifdef cxx20opts_has_concepts
 
@@ -80,11 +81,12 @@ namespace cxx20opts::concepts {
 
 namespace cxx20opts {
 
-    namespace detial {
+
+    namespace detail {
         constexpr static inline std::string_view separator = "-";
         constexpr static inline std::string_view double_separator = "--";
         constexpr static inline std::string_view windows_separator = "/";
-    }  // namespace detial
+    }  // namespace detail
 
 
     struct option {  // def impl, in development
@@ -105,8 +107,11 @@ namespace cxx20opts {
 #endif
 
     struct raw_args {
-        int argc;
-        char** argv;
+        using count_t = int;
+        using c_array_string_t = char**;
+
+        count_t argc;
+        c_array_string_t argv;
     };
 
     struct enable_windows_like_argument_t {};
@@ -118,14 +123,13 @@ namespace cxx20opts {
 
     class options {
     public:
-        using count_t = int;
         using raw_args_t = raw_args;
 
-        options() noexcept {}
-        options(const count_t argc_, char** argv_) noexcept
-            : argc{argc_}, argv{argv_}, raw_{argc, argv} {
-            parse_impl();
-        }
+        using count_t = raw_args::count_t;
+        using c_array_string_t = raw_args::c_array_string_t;
+
+        options() noexcept = default;
+        options(const count_t argc_, char** argv_) noexcept : raw_{argc_, argv_} { parse_impl(); }
 
         auto parse(const count_t argc_, char** argv_) noexcept -> options&;
         auto enable_windows_like_argument() noexcept -> options&;
@@ -145,9 +149,8 @@ namespace cxx20opts {
 
     private:
         bool enabled_windows_like_argument_opts{false};
-        int argc;
-        char** argv;
         raw_args_t raw_;
+        std::vector<std::optional<option>> opts;
 
 
         auto parse_impl() noexcept -> void;
@@ -159,12 +162,11 @@ namespace cxx20opts {
 
 
     inline auto options::parse(const options::count_t argc_, char** argv_) noexcept -> options& {
-        argc = argc_;
-        argv = argv_;
         raw_ = raw_args_t{argc_, argv_};
         parse_impl();
         return *this;
     }
+
 
     inline auto options::enable_windows_like_argument() noexcept -> options& {
         enabled_windows_like_argument_opts = true;
@@ -175,38 +177,36 @@ namespace cxx20opts {
         return *this;
     }
 
-    inline auto options::operator()(option&& o) noexcept -> options& {
-        // TODO: unimplemented
 
-        (void)(o);
+    inline auto options::operator()(option&& o) noexcept -> options& {
+        add(std::move(o));
         return *this;
     }
-    inline auto options::operator()(const option& o) -> options& {
-        // TODO: unimplemented
 
-        (void)(o);
+    // a copy will be created option  /* throws std::bad_alloc */
+    inline auto options::operator()(const option& o) -> options& {
+        add(o);
         return *this;
     }
 
     inline auto options::add(option&& o) noexcept -> options& {
-        // TODO: unimplemented
-
-        (void)(o);
+        opts.emplace_back(std::move(o));
         return *this;
     }
-    inline auto options::add(const option& o) -> options& {
-        // TODO: unimplemented
 
-        (void)(o);
+    // a copy will be created option  /* throws std::bad_alloc */
+    inline auto options::add(const option& o) -> options& {
+        opts.push_back(o);
         return *this;
     }
 
 
     // unchecked method
     inline auto options::operator[](const options::count_t n) const noexcept -> std::string_view {
-        return {argv[n]};
+        return {raw_.argv[n]};
     }
 
+    // unchecked method
     inline auto options::operator[](std::string_view str) const noexcept -> std::string_view {
         // TODO: unimplemented
 
@@ -216,10 +216,10 @@ namespace cxx20opts {
 
     /* throws std::out_of_range */
     inline auto options::at(const options::count_t n) const -> std::string_view {
-        if (n > argc) {
+        if (n > raw_.argc) {
             throw std::out_of_range("");
         }
-        return {argv[n]};
+        return {raw_.argv[n]};
     }
 
     /* throws std::out_of_range */
@@ -230,10 +230,9 @@ namespace cxx20opts {
         return {"unimplemented"};
     }
 
-    inline auto options::raw() const noexcept -> const raw_args_t& {
-        //
-        return raw_;
-    }
+    inline auto options::raw() const noexcept -> const raw_args_t& { return raw_; }
+
+
 
     inline auto options::parse_impl() noexcept -> void {
         // TODO: unimplemented
