@@ -6,6 +6,8 @@
 #include <iterator>
 #include <cassert>
 #include <iostream>
+#include <limits.h>
+#include <sstream>
 
 
 using namespace cxx20opts;
@@ -114,7 +116,7 @@ constinit auto run_tests_for_tests = tests_for_tests();
 int main(int argc, char* argv[] /* this is vla? */) {
     cxx20opts::options opts{argc, argv};
 
-    opts.add(option{.short_name = "-h", .name = "help", .description = "Print help"});
+    opts.add(option{.short_name = "h", .name = "help", .description = "Print help"});
 
     opts | option{.short_name = "f", .name = "file", .description = "Path to Some File"}  //
         | option{.name = "verbose", .description = "verbose output"}                      //
@@ -124,7 +126,22 @@ int main(int argc, char* argv[] /* this is vla? */) {
     opts | enable_windows_like_argument | disable_windows_like_argument |
         enable_windows_like_argument;
 
-    option x{.name = " ", .description = " "};
+    opts | enable_help;
+    opts.enable_help_output();
+
+
+    // set argument for print help
+    opts.custom_help({"MyHelp"});
+    opts | help_argument{"SomeHelp"};
+    opts | help_argument{"SomeHelp"};
+
+    std::string h{"asdasds"};
+    opts | help_argument{h};
+
+    opts | disable_help;
+    opts.disable_help_output();
+
+    option x{.name = "none", .description = "NoNe"};
     //    x.defautl_value<std::string_view>(""); // not implemented.
 
     opts.add(x);             // copy
@@ -138,6 +155,18 @@ int main(int argc, char* argv[] /* this is vla? */) {
     assert(opts.raw().argc == argc);           // get argc
     assert(opts.raw().argv == argv);           // get argv
 
+
+    std::stringstream info;
+    info << "(${commit_timestamp}, собрано " << __DATE__ << " " << __TIME__ << ")";
+
+    opts.description(program_description{
+        .name = "cxx20opts.test - CXX 20 Opts Test Programm",              //
+        .version = std::string{std::string{"v"} + std::to_string(0.42f)},  //
+        .info = info.str()                                                 //
+    });
+
+    opts | enable_help;
+    opts.print_help(std::cout);
 
     return 0;
 }

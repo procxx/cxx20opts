@@ -35,8 +35,23 @@ int main(int argc, char* argv[] /*this is vla?*/) {
         | option{"o", "output", "output file"}       //
         | option{"version", "show app version"};     //
 
+    opts | option{{}, {""}, {}};
 
     opts(option{"", "kek", "lol"})({})({})({});  // упрлся
+
+    opts | enable_help;
+    opts.enable_help_output();
+
+    // set argument for print help
+    opts.custom_help({"MyHelp"});
+    opts | help_argument{"SomeHelp"};
+    opts | help_argument{"SomeHelp"};
+
+    std::string h{"asdasds"};
+    opts | help_argument{h};
+
+    opts | disable_help;
+    opts.disable_help_output();
 
 
     opts | custom_user_struct{"AAAAAAAAAAA"};
