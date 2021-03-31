@@ -147,7 +147,7 @@ int main(int argc, char* argv[] /* this is vla? */) {
     opts.add(x);             // copy
     opts.add(std::move(x));  // move
 
-    opts(option{.name = "kek", .description = "lol"})({})({})({});  // упрлся
+    opts(option{.name = "kek", .description = "lol"})({{}, {}, "*-_-*"});
 
     opts["kecasdak"];                          // unchecked UB, out of range, ubsan не ловит
     opts["v"], opts["version"];                // semantically equivalent
@@ -160,9 +160,9 @@ int main(int argc, char* argv[] /* this is vla? */) {
     info << "(${commit_timestamp}, собрано " << __DATE__ << " " << __TIME__ << ")";
 
     opts.description(program_description{
-        .name = "cxx20opts.test - CXX 20 Opts Test Programm",              //
-        .version = std::string{std::string{"v"} + std::to_string(0.42f)},  //
-        .info = info.str()                                                 //
+        .name = executable_name(opts.raw()) + " - CXX 20 Opts Test Programm",  //
+        .version = std::string{std::string{"v"} + std::to_string(0.42f)},      //
+        .info = info.str()                                                     //
     });
 
     opts | enable_help;

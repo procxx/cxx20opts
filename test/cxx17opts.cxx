@@ -27,18 +27,17 @@ void test_options() {
 
 int main(int argc, char* argv[] /*this is vla?*/) {
     cxx20opts::options opts{argc, argv};
-    test_options();
+    //    test_options();
 
     opts.add(option{"-h", "help", "Print help"});
-    opts | option{"f", "file", "Path to Some File"}  //
-        | option{"verbose", "verbose output"}        //
-        | option{"o", "output", "output file"}       //
-        | option{"version", "show app version"};     //
+    opts | option{"f", "file", "Path to Some File"}   //
+        | option{{}, "verbose", "verbose output"}     //
+        | option{"o", "output", "output file"}        //
+        | option{{}, "version", "show app version"};  //
 
-    opts | option{{}, {""}, {}};
+    opts | option{{"d"}, {"dd"}, {"Descriptions..."}};
 
-    opts(option{"", "kek", "lol"})({})({})({});  // упрлся
-
+    opts(option{{}, "kek", "lol"});
     opts | enable_help;
     opts.enable_help_output();
 
@@ -54,13 +53,27 @@ int main(int argc, char* argv[] /*this is vla?*/) {
     opts.disable_help_output();
 
 
-    opts | custom_user_struct{"AAAAAAAAAAA"};
+    opts | custom_user_struct{"AAAA"};
 
     opts["kecasdak"];                          // unchecked UB, out of range, ubsan не ловит
     opts["v"], opts["version"];                // semantically equivalent
     opts.at("K"), opts.at("ADKFJDASKJFADHA");  // throws exception - out of range
     assert(opts.raw().argc == argc);           // get argc
     assert(opts.raw().argv == argv);           // get argv
+
+
+    std::stringstream info;
+    info << "(${commit_timestamp}, собрано " << __DATE__ << " " << __TIME__ << ")";
+
+    opts.description(program_description{
+        executable_name(opts.raw()) + " - CXX 20 Opts Test Programm",  // name
+        std::string{std::string{"v"} + std::to_string(0.42f)},         // version
+        info.str()                                                     // info
+    });
+
+    opts | enable_help;
+    opts.print_help(std::cout);
+
 
     return 0;
 }
