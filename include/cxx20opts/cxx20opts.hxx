@@ -13,6 +13,20 @@
 #define cxx20opts_has_concepts
 #endif
 
+#if __has_attribute(pure)
+#define cxx20opts_pure __attribute__((pure))
+#else
+#define cxx20opts_pure
+#endif
+
+#if __has_attribute(const)
+#define cxx20opts_const __attribute__((const))
+#else
+#define cxx20opts_const
+#endif
+
+
+
 #include <memory>
 #include <string_view>
 #include <string>
@@ -192,8 +206,8 @@ namespace cxx20opts {
         /* throws std::out_of_range */
         auto at(std::string_view) const -> std::string_view;
 
-        auto raw() const noexcept -> const raw_args_t&;
-        auto opts() const noexcept -> const opts_t;
+        cxx20opts_pure auto raw() const noexcept -> const raw_args_t&;
+        cxx20opts_pure auto opts() const noexcept -> const opts_t;
 
         // tags:
 
@@ -243,12 +257,14 @@ namespace cxx20opts {
 
 
 #if defined(cxx20opts_has_concepts)
-        // auto operator[](concepts::string_observer auto str) const noexcept -> std::string_view;
+        //  cxx20opts_pure auto operator[](concepts::string_observer auto str) const noexcept ->
+        //  std::string_view;
 #endif
     };
 
 
-    [[maybe_unused]] auto executable_name(const raw_args& args) noexcept -> std::string {
+    [[maybe_unused]] cxx20opts_const auto executable_name(const raw_args& args) noexcept
+        -> std::string {
         return {fs::path{args.argv[options::number_path_to_exe_in_argv]}.filename().string()};
     }
 
