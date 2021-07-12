@@ -38,6 +38,61 @@
 #include <iostream>
 #include <filesystem>
 
+#if defined(cxx20opts_has_concepts)
+
+#if __has_include(<concepts>)
+#include <concepts>
+#endif
+
+// TODO: unimplemented
+namespace cxx20opts::concepts {
+
+    template <class T>
+    concept nothrow_default_ctorble =
+        std::is_trivially_default_constructible_v<T> || std::is_nothrow_constructible_v<T>;
+
+    template <class T>
+    concept default_constructible = std::is_default_constructible_v<T>;
+
+    template <class T>
+    concept trivially_destructible = std::is_trivially_destructible_v<T>;
+
+    template <class T>
+    concept c_str = requires(T string) {
+        { string.c_str() }  // need get c-style string
+        noexcept->std::same_as<typename T::const_pointer>;
+    };
+
+    template <class T>
+    concept old_const_iterators = requires(T string) {
+        { string.cbegin() }
+        noexcept->std::same_as<typename T::iterator>;
+        { string.cend() }
+        noexcept->std::same_as<typename T::iterator>;
+    };
+
+    template <class T>
+    concept string_observer = std::movable<T> &&(old_const_iterators<T>
+                                                 /* || const_range_iterators<T>, in development */)
+        //        && c_str<T> // Needed ???
+        ;
+
+
+    template <class T>
+    concept pair = std::movable<T> /* && has two template args, in development */;
+
+
+    //    template <class T>
+    //    concept option = requires {
+    //        requires std::same_as<decltype(T::name), custom_string_type>;
+    //        requires std::same_as<decltype(T::description), custom_string_type>;
+    //        requires std::same_as<decltype(T::short_name),
+    //        custom_optional_type<custom_string_type>>;
+    //    };
+
+}  // namespace cxx20opts::concepts
+
+#endif
 
 
 namespace cxx20opts {
@@ -58,6 +113,16 @@ namespace cxx20opts {
         std::optional<std::string_view> description{std::nullopt};
     };
 
+
+#if defined(cxx20opts_has_concepts)
+    //         option(concepts::string_observer auto /*str*/) {}
+    // move this to ctor args / to template parametr, with default - str view?
+    //        concepts::string_observer auto name;
+    //        concepts::string_observer auto description;
+    //        concepts::custom_optional_type<concepts::custom_string_type> auto description;
+
+    //    static_assert(concepts::option<option>);
+#endif
 
     struct raw_args {
         using count_t = int;
