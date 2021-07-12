@@ -42,21 +42,65 @@
 
 namespace cxx20opts {
 
+    namespace fs = std::filesystem;
+
 
     namespace separator {
-        using namespace std::literals;
+        using namespace std::string_view_literals;
         [[maybe_unused]] constexpr inline std::string_view short_ = "-"sv;
         [[maybe_unused]] constexpr inline std::string_view double_ = "--"sv;
         [[maybe_unused]] constexpr inline std::string_view windows_ = "/"sv;
     }  // namespace separator
 
 
+
+
     /// def impl, in development
     struct option {
+    public:
         std::optional<std::string_view> short_name{std::nullopt};
         std::optional<std::string_view> name{std::nullopt};
         std::optional<std::string_view> description{std::nullopt};
     };
+
+    struct name_t {
+        std::string_view name{};
+    };
+    struct short_name_t {
+        std::string_view short_name{};
+    };
+    struct description_t {
+        std::string_view description{};
+    };
+
+    inline namespace literals {
+
+        auto operator"" _name(const char* s) noexcept -> name_t { return {s}; }
+        auto operator"" _short_name(const char* s) noexcept -> short_name_t { return {s}; }
+        auto operator"" _description(const char* s) noexcept -> description_t { return {s}; }
+
+        auto operator"" _name(const char* s, std::size_t n) noexcept -> name_t { return {{s, n}}; }
+        auto operator"" _short_name(const char* s, std::size_t n) noexcept -> short_name_t {
+            return {{s, n}};
+        }
+        auto operator"" _description(const char* s, std::size_t n) noexcept -> description_t {
+            return {{s, n}};
+        }
+
+    }  // namespace literals
+
+    inline auto operator|(option& z, name_t&& o) noexcept -> option& {
+        z.name = o.name;
+        return z;
+    }
+    inline auto operator|(option& z, short_name_t&& o) noexcept -> option& {
+        z.short_name = o.short_name;
+        return z;
+    }
+    inline auto operator|(option& z, description_t&& o) noexcept -> option& {
+        z.description = o.description;
+        return z;
+    }
 
 
     struct raw_args {
@@ -100,7 +144,6 @@ namespace cxx20opts {
     }  // namespace tags
 
 
-    namespace fs = std::filesystem;
 
 
     class options {
@@ -153,7 +196,7 @@ namespace cxx20opts {
         [[maybe_unused]] auto enable_help_output() noexcept -> options&;
         [[maybe_unused]] auto disable_help_output() noexcept -> options&;
 
-        [[maybe_unused]] auto custom_help(help_argument_t&& h) noexcept -> options&;
+        [[maybe_unused]] auto custom_help_trigger(help_argument_t&& h) noexcept -> options&;
         [[maybe_unused]] auto print_help(std::ostream& os) noexcept -> options&;
 
         [[maybe_unused]] auto description(program_description_t&& desc) noexcept -> options&;
@@ -287,7 +330,7 @@ namespace cxx20opts {
     }
 
 
-    inline auto options::custom_help(help_argument_t&& h) noexcept -> options& {
+    inline auto options::custom_help_trigger(help_argument_t&& h) noexcept -> options& {
         help_string_output = std::move(h);
         return *this;
     }
@@ -373,7 +416,7 @@ namespace cxx20opts {
     }
 
     inline auto operator|(options& z, options::help_argument_t&& h) noexcept -> options& {
-        z.custom_help(std::move(h));
+        z.custom_help_trigger(std::move(h));
         return z;
     }
 

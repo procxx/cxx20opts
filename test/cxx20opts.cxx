@@ -9,9 +9,8 @@
 #include <limits.h>
 #include <sstream>
 
-
 using namespace cxx20opts;
-
+using namespace cxx20opts::literals;
 
 int main(int argc, char* argv[] /* this is vla? */) {
     cxx20opts::options opts{argc, argv};
@@ -25,13 +24,14 @@ int main(int argc, char* argv[] /* this is vla? */) {
 
     opts | enable_windows_like_argument | disable_windows_like_argument |
         enable_windows_like_argument;
+    opts.disable_windows_like_argument();
 
     opts | enable_help;
     opts.enable_help_output();
 
 
     // set argument for print help
-    opts.custom_help({"MyHelp"});
+    opts.custom_help_trigger({"MyHelp"});
     opts | help_argument{"SomeHelp"};
     opts | help_argument{"SomeHelp"};
 

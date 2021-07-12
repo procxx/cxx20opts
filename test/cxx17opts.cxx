@@ -3,11 +3,12 @@
 #include <iostream>
 
 using namespace cxx20opts;
+using namespace std::string_view_literals;
 
 std::ostream& operator<<(std::ostream& os, const option& o) {
-    os << "short_name: " << o.short_name.value_or("")       //
-       << "\nname: " << o.name.value_or("")                 //
-       << "\ndescription: " << o.description.value_or("");  //
+    os << "short_name: " << o.short_name.value_or(""sv)       //
+       << "\nname: " << o.name.value_or(""sv)                 //
+       << "\ndescription: " << o.description.value_or(""sv);  //
     return os;
 }
 
@@ -25,15 +26,22 @@ void test_options() {
     std::cout << x << std::endl;
 }
 
+
 int main(int argc, char* argv[] /*this is vla?*/) {
     cxx20opts::options opts{argc, argv};
     //    test_options();
 
+    option x{};
+    (void)(x);
+
+    x | "a"_short_name | "ask"_name |
+        "Before performing the action, display what will take place"_description;
+
     opts.add(option{"-h", "help", "Print help"});
-    opts | option{"f", "file", "Path to Some File"}   //
-        | option{{}, "verbose", "verbose output"}     //
-        | option{"o", "output", "output file"}        //
-        | option{{}, "version", "show app version"};  //
+    opts | x | option{"f", "file", "Path to Some File"}  //
+        | option{{}, "verbose", "verbose output"}        //
+        | option{"o", "output", "output file"}           //
+        | option{{}, "version", "show app version"};     //
 
     opts | option{{"d"}, {"dd"}, {"Descriptions..."}};
 
@@ -42,7 +50,7 @@ int main(int argc, char* argv[] /*this is vla?*/) {
     opts.enable_help_output();
 
     // set argument for print help
-    opts.custom_help({"MyHelp"});
+    opts.custom_help_trigger({"MyHelp"});
     opts | help_argument{"SomeHelp"};
     opts | help_argument{"SomeHelp"};
 
