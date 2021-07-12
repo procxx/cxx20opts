@@ -47,8 +47,10 @@ public:
     auto cbegin() const noexcept -> iterator;
     auto cend() const noexcept -> iterator;
 
-    constexpr basic_str_view() noexcept requires concepts::nothrow_default_ctorble<CharT> = default;
-    constexpr ~basic_str_view() noexcept requires concepts::trivially_destructible<CharT> = default;
+    constexpr basic_str_view() noexcept requires concepts::nothrow_default_ctorble<CharT>
+    = default;
+    constexpr ~basic_str_view() noexcept requires concepts::trivially_destructible<CharT>
+    = default;
     constexpr auto c_str() const noexcept -> const_pointer;
 
 private:
@@ -63,12 +65,12 @@ using my_str_view = basic_str_view<char>;
 template <class First_t, class Second_t>
 class mypair {
 public:
-    constexpr mypair() noexcept requires concepts::nothrow_default_ctorble<
-        First_t>&& concepts::nothrow_default_ctorble<Second_t>
+    constexpr mypair() noexcept requires concepts::nothrow_default_ctorble<First_t> &&
+        concepts::nothrow_default_ctorble<Second_t>
         : first{}, second{} {}
 
-    constexpr mypair() requires concepts::default_constructible<
-        First_t>&& concepts::default_constructible<Second_t>
+    constexpr mypair() requires concepts::default_constructible<First_t> &&
+        concepts::default_constructible<Second_t>
         : first{}, second{} {}
 
     constexpr ~mypair() noexcept = default;
@@ -105,7 +107,7 @@ consteval auto tests_for_tests() -> int {
     static_assert(concepts::pair<mypair<char*, char**>>);
 
     static_assert(concepts::string_observer<my_str_view>);
-    static_assert(concepts::string_observer<my_str_view>);
+    static_assert(concepts::string_observer<std::string_view>);
     static_assert(concepts::string_observer<my_str_view>);
 
     return 0;

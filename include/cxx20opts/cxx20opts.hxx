@@ -72,8 +72,8 @@ namespace cxx20opts::concepts {
     };
 
     template <class T>
-    concept string_observer = std::movable<T> && (old_const_iterators<T>
-                                                  /* || const_range_iterators<T>, in development */)
+    concept string_observer = std::movable<T> &&(old_const_iterators<T>
+                                                 /* || const_range_iterators<T>, in development */)
         //        && c_str<T> // Needed ???
         ;
 
@@ -99,9 +99,10 @@ namespace cxx20opts {
 
 
     namespace separator {
-        [[maybe_unused]] constexpr static inline std::string_view short_ = "-";
-        [[maybe_unused]] constexpr static inline std::string_view double_ = "--";
-        [[maybe_unused]] constexpr static inline std::string_view windows_ = "/";
+        using namespace std::literals;
+        [[maybe_unused]] constexpr inline std::string_view short_ = "-"sv;
+        [[maybe_unused]] constexpr inline std::string_view double_ = "--"sv;
+        [[maybe_unused]] constexpr inline std::string_view windows_ = "/"sv;
     }  // namespace separator
 
 
@@ -151,15 +152,15 @@ namespace cxx20opts {
         struct enable_help_t {};
         struct disable_help_t {};
 
-        [[maybe_unused]] constexpr static inline enable_help_t enable_help{};
-        [[maybe_unused]] constexpr static inline disable_help_t disable_help{};
+        [[maybe_unused]] constexpr inline enable_help_t enable_help{};
+        [[maybe_unused]] constexpr inline disable_help_t disable_help{};
 
-        [[maybe_unused]] constexpr static inline enable_windows_like_argument_t
+        [[maybe_unused]] constexpr inline enable_windows_like_argument_t
             enable_windows_like_argument{};
-        [[maybe_unused]] constexpr static inline disable_windows_like_argument_t
+        [[maybe_unused]] constexpr inline disable_windows_like_argument_t
             disable_windows_like_argument{};
 
-        [[maybe_unused]] constexpr static inline help_argument help_default{"help"};
+        [[maybe_unused]] constexpr inline help_argument help_default{"help"};
 
     }  // namespace tags
 
@@ -329,6 +330,8 @@ namespace cxx20opts {
     inline auto options::at(std::string_view str) const -> std::string_view {
         // TODO: unimplemented
 
+        // throw std::out_of_range("");
+
         (void)(str);
         return {"unimplemented"};
     }
@@ -370,7 +373,7 @@ namespace cxx20opts {
                 os << *description_->info << "\n";
             }  // end if
 
-        }  // end if
+        }  // end if has description
 
         for (const auto& i : opts_) {
             os << padding;
