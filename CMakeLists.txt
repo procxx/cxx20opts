@@ -28,13 +28,54 @@ if(BUILD_TESTS)
     add_subdirectory(test)
 endif()
 
-#install(
-#TARGETS ${PROJECT_NAME}
-#    EXPORT ${PROJECT_NAME}
-#    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-#)
-
+# install headers
 install(
     DIRECTORY ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+# install cmake targets
+install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}_Targets
+)
+
+# create ${PROJECT_NAME}Targets.cmake
+install(EXPORT ${PROJECT_NAME}_Targets
+    FILE ${PROJECT_NAME}Targets.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/${PROJECT_NAME}
+)
+
+# create ${PROJECT_NAME}ConfigVersion.cmake file
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${PROJECT_NAME}ConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+# create ${PROJECT_NAME}Config.cmake file
+configure_package_config_file(
+    "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION
+    ${CMAKE_INSTALL_DATAROOTDIR}/cmake/${PROJECT_NAME}
+)
+
+# create pkgconfig file
+configure_file(
+    "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}.pc.in" ${PROJECT_NAME}.pc @ONLY
+)
+
+install(
+    FILES
+    ${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    ${CMAKE_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/${PROJECT_NAME}
+)
+install(
+    FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
 )
