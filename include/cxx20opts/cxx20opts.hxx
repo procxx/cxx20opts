@@ -26,7 +26,6 @@
 #endif
 
 
-
 #include <memory>
 #include <string_view>
 #include <string>
@@ -53,11 +52,8 @@ namespace cxx20opts {
     }  // namespace separator
 
 
-
-
     /// def impl, in development
     struct option {
-    public:
         std::optional<std::string_view> short_name{std::nullopt};
         std::optional<std::string_view> name{std::nullopt};
         std::optional<std::string_view> description{std::nullopt};
@@ -125,8 +121,8 @@ namespace cxx20opts {
 
     inline namespace tags {
 
-        struct enable_windows_like_argument_t {};
-        struct disable_windows_like_argument_t {};
+        struct enable_windows_style_behavior_t {};
+        struct disable_windows_style_behavior_t {};
 
         struct enable_help_t {};
         struct disable_help_t {};
@@ -134,16 +130,18 @@ namespace cxx20opts {
         [[maybe_unused]] constexpr inline enable_help_t enable_help{};
         [[maybe_unused]] constexpr inline disable_help_t disable_help{};
 
-        [[maybe_unused]] constexpr inline enable_windows_like_argument_t
-            enable_windows_like_argument{};
-        [[maybe_unused]] constexpr inline disable_windows_like_argument_t
-            disable_windows_like_argument{};
+        [[maybe_unused]] constexpr inline enable_windows_style_behavior_t
+            enable_windows_style_behavior{};
+        [[maybe_unused]] constexpr inline disable_windows_style_behavior_t
+            disable_windows_style_behavior{};
 
         [[maybe_unused]] constexpr inline help_argument help_default{"help"};
 
     }  // namespace tags
 
 
+    template <class T>
+    struct value {};
 
 
     class options {
@@ -190,8 +188,11 @@ namespace cxx20opts {
 
         // tags:
 
-        [[maybe_unused]] auto enable_windows_like_argument() noexcept -> options&;
-        [[maybe_unused]] auto disable_windows_like_argument() noexcept -> options&;
+        [[maybe_unused]] auto enable_windows_style_behavior() noexcept -> options&;
+        [[maybe_unused]] auto disable_windows_style_behavior() noexcept -> options&;
+        [[maybe_unused]] auto status_windows_style_behavior() noexcept -> bool {
+            return windows_style_behavior_on;
+        }
 
         [[maybe_unused]] auto enable_help_output() noexcept -> options&;
         [[maybe_unused]] auto disable_help_output() noexcept -> options&;
@@ -201,10 +202,12 @@ namespace cxx20opts {
 
         [[maybe_unused]] auto description(program_description_t&& desc) noexcept -> options&;
 
+        template <class T>
+        [[maybe_unused]] auto operator()(option&&, value<T> t) noexcept -> options& {}
 
     private:
         // false by default
-        bool windows_like_argument_opts_on{false};
+        bool windows_style_behavior_on{false};
 
         // true by default
         bool help_support{true};
@@ -242,9 +245,9 @@ namespace cxx20opts {
     };
 
 
-    [[maybe_unused]] cxx20opts_const auto executable_name(const raw_args& args) noexcept
-        -> std::string {
-        return {fs::path{args.argv[options::number_path_to_exe_in_argv]}.filename().string()};
+    [[maybe_unused]] cxx20opts_const inline auto executable_name(const raw_args& args) noexcept
+        -> fs::path {
+        return fs::path{args.argv[options::number_path_to_exe_in_argv]}.filename();
     }
 
 }  // namespace cxx20opts
@@ -257,17 +260,6 @@ namespace cxx20opts {
     inline auto options::parse(const options::count_t argc_, char** argv_) noexcept -> options& {
         raw_ = raw_args_t{argc_, argv_};
         parse_impl();
-        return *this;
-    }
-
-    inline auto options::operator()(option&& o) noexcept -> options& {
-        add(std::move(o));
-        return *this;
-    }
-
-    // a copy will be created option  /* throws std::bad_alloc */
-    inline auto options::operator()(const option& o) -> options& {
-        add(o);
         return *this;
     }
 
@@ -325,7 +317,7 @@ namespace cxx20opts {
         for (options::count_t i = 0; i < raw_.argc; ++i) {
             ;
         }
-        if (windows_like_argument_opts_on) {
+        if (windows_style_behavior_on) {
         }
     }
 
@@ -389,12 +381,12 @@ namespace cxx20opts {
     // more boilerplate...
 
 
-    inline auto options::enable_windows_like_argument() noexcept -> options& {
-        windows_like_argument_opts_on = true;
+    inline auto options::enable_windows_style_behavior() noexcept -> options& {
+        windows_style_behavior_on = true;
         return *this;
     }
-    inline auto options::disable_windows_like_argument() noexcept -> options& {
-        windows_like_argument_opts_on = false;
+    inline auto options::disable_windows_style_behavior() noexcept -> options& {
+        windows_style_behavior_on = false;
         return *this;
     }
 
@@ -406,9 +398,6 @@ namespace cxx20opts {
         help_support = false;
         return *this;
     }
-
-
-
 
     inline auto operator|(options& z, options::program_description_t&& desc) noexcept -> options& {
         z.description(std::move(desc));
@@ -424,25 +413,37 @@ namespace cxx20opts {
         z.add(std::move(o));
         return z;
     }
+    // a copy will be created option  /* throws std::bad_alloc */
     inline auto operator|(options& z, const option& o) -> options& {
         z.add(o);
         return z;
     }
 
-    inline auto operator|(options& z, enable_windows_like_argument_t&&) noexcept -> options& {
-        z.enable_windows_like_argument();
+    inline auto options::operator()(option&& o) noexcept -> options& {
+        add(std::move(o));
+        return *this;
+    }
+    // a copy will be created option  /* throws std::bad_alloc */
+    inline auto options::operator()(const option& o) -> options& {
+        add(o);
+        return *this;
+    }
+
+    inline auto operator|(options& z, enable_windows_style_behavior_t&&) noexcept -> options& {
+        z.enable_windows_style_behavior();
         return z;
     }
-    inline auto operator|(options& z, const enable_windows_like_argument_t&) noexcept -> options& {
-        z.enable_windows_like_argument();
+    inline auto operator|(options& z, const enable_windows_style_behavior_t&) noexcept -> options& {
+        z.enable_windows_style_behavior();
         return z;
     }
-    inline auto operator|(options& z, disable_windows_like_argument_t&&) noexcept -> options& {
-        z.disable_windows_like_argument();
+    inline auto operator|(options& z, disable_windows_style_behavior_t&&) noexcept -> options& {
+        z.disable_windows_style_behavior();
         return z;
     }
-    inline auto operator|(options& z, const disable_windows_like_argument_t&) noexcept -> options& {
-        z.disable_windows_like_argument();
+    inline auto operator|(options& z, const disable_windows_style_behavior_t&) noexcept
+        -> options& {
+        z.disable_windows_style_behavior();
         return z;
     }
 
