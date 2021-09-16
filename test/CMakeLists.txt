@@ -37,6 +37,7 @@ set(lib_link_list
     )
 foreach(i ${test_list})
     add_executable(${i}.test ${i})
+    source_group(sources FILES ${i})
     target_link_libraries(${i}.test PUBLIC ${lib_link_list})
     target_link_options(${i}.test PUBLIC ${MY_CXX_LINKER_FLAGS})
     target_compile_options(${i}.test PUBLIC ${MY_CXX_COMPILLER_FLAGS})

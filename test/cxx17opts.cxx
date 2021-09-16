@@ -75,9 +75,9 @@ int main(int argc, char* argv[] /*this is vla?*/) {
     info << "(${commit_timestamp}, собрано " << __DATE__ << " " << __TIME__ << ")";
 
     opts.description(program_description{
-        executable_name(opts.raw()) + " - CXX 20 Opts Test Programm",  // name
-        std::string{std::string{"v"} + std::to_string(0.42f)},         // version
-        info.str()                                                     // info
+        executable_name(opts.raw()).string() + " - CXX 20 Opts Test Programm",  // name
+        std::string{std::string{"v"} + std::to_string(0.42f)},                  // version
+        info.str()                                                              // info
     });
 
     opts | enable_help;
