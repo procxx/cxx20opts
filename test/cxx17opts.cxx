@@ -41,7 +41,8 @@ int main(int argc, char* argv[] /*this is vla?*/) {
     opts | x | option{"f", "file", "Path to Some File"}  //
         | option{{}, "verbose", "verbose output"}        //
         | option{"o", "output", "output file"}           //
-        | option{{}, "version", "show app version"};     //
+        | option{{}, "version", "show app version"}      //
+    ;
 
     opts | option{{"d"}, {"dd"}, {"Descriptions..."}};
 
