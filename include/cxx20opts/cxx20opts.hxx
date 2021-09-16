@@ -160,53 +160,57 @@ namespace cxx20opts {
 
         constexpr options() noexcept {}
         constexpr options(program_description_t&& name) noexcept : description_{std::move(name)} {}
-        options(const count_t argc_, char** argv_) noexcept {
+        constexpr options(const count_t argc_, char** argv_) noexcept {
             raw_.emplace(raw_args{argc_, argv_});
             parse_impl();
         }
 
-        [[maybe_unused]] auto parse(const count_t argc_, char** argv_) noexcept -> options&;
+        [[maybe_unused]] constexpr auto parse(const count_t argc_, char** argv_) noexcept
+            -> options&;
 
         /* throws std::bad_alloc */
-        [[maybe_unused]] auto operator()(const option&) -> options&;
+        [[maybe_unused]] constexpr auto operator()(const option&) -> options&;
 
-        [[maybe_unused]] auto operator()(option&&) noexcept -> options&;
+        [[maybe_unused]] constexpr auto operator()(option&&) noexcept -> options&;
 
         /* throws std::bad_alloc */
-        [[maybe_unused]] auto add(const option&) -> options&;
+        [[maybe_unused]] constexpr auto add(const option&) -> options&;
 
-        [[maybe_unused]] auto add(option&&) noexcept -> options&;
+        [[maybe_unused]] constexpr auto add(option&&) noexcept -> options&;
 
 
-        auto operator[](const count_t) const noexcept -> std::string_view;
-        auto operator[](std::string_view) const noexcept -> std::string_view;
+        constexpr auto operator[](const count_t) const noexcept -> std::string_view;
+        constexpr auto operator[](std::string_view) const noexcept -> std::string_view;
 
         /* throws std::out_of_range */
-        auto at(const count_t) const -> std::string_view;
+        constexpr auto at(const count_t) const -> std::string_view;
         /* throws std::out_of_range */
-        auto at(std::string_view) const -> std::string_view;
+        constexpr auto at(std::string_view) const -> std::string_view;
 
-        cxx20opts_pure auto raw() const noexcept -> const raw_args_t&;
-        cxx20opts_pure auto opts() const noexcept -> const opts_t;
+        cxx20opts_pure constexpr auto raw() const noexcept -> const raw_args_t&;
+        cxx20opts_pure constexpr auto opts() const noexcept -> const opts_t;
 
         // tags:
 
-        [[maybe_unused]] auto enable_windows_style_behavior() noexcept -> options&;
-        [[maybe_unused]] auto disable_windows_style_behavior() noexcept -> options&;
-        [[maybe_unused]] auto status_windows_style_behavior() noexcept -> bool {
+        [[maybe_unused]] constexpr auto enable_windows_style_behavior() noexcept -> options&;
+        [[maybe_unused]] constexpr auto disable_windows_style_behavior() noexcept -> options&;
+        [[maybe_unused]] constexpr auto status_windows_style_behavior() noexcept -> bool {
             return windows_style_behavior_on;
         }
 
-        [[maybe_unused]] auto enable_help_output() noexcept -> options&;
-        [[maybe_unused]] auto disable_help_output() noexcept -> options&;
+        [[maybe_unused]] constexpr auto enable_help_output() noexcept -> options&;
+        [[maybe_unused]] constexpr auto disable_help_output() noexcept -> options&;
 
-        [[maybe_unused]] auto custom_help_trigger(help_argument_t&& h) noexcept -> options&;
-        [[maybe_unused]] auto print_help(std::ostream& os) noexcept -> options&;
+        [[maybe_unused]] constexpr auto custom_help_trigger(help_argument_t&& h) noexcept
+            -> options&;
+        [[maybe_unused]] constexpr auto print_help(std::ostream& os) noexcept -> options&;
 
-        [[maybe_unused]] auto description(program_description_t&& desc) noexcept -> options&;
+        [[maybe_unused]] constexpr auto description(program_description_t&& desc) noexcept
+            -> options&;
 
-        template <class T>
-        [[maybe_unused]] auto operator()(option&&, value<T> t) noexcept -> options& {}
+        //        template <class T>
+        //        [[maybe_unused]] constexpr auto operator()(option&&, value<T> t) noexcept ->
+        //        options& {}
 
     private:
         // false by default
@@ -238,7 +242,7 @@ namespace cxx20opts {
         program_description_t description_{std::nullopt};
 
 
-        auto parse_impl() noexcept -> void;
+        constexpr auto parse_impl() noexcept -> void;
 
 
 #if defined(cxx20opts_has_concepts)
@@ -260,31 +264,34 @@ namespace cxx20opts {
 
 namespace cxx20opts {
 
-    inline auto options::parse(const options::count_t argc_, char** argv_) noexcept -> options& {
+    constexpr inline auto options::parse(const options::count_t argc_, char** argv_) noexcept
+        -> options& {
         raw_.emplace(raw_args{argc_, argv_});
         parse_impl();
         return *this;
     }
 
-    inline auto options::add(option&& o) noexcept -> options& {
+    constexpr inline auto options::add(option&& o) noexcept -> options& {
         opts_->emplace_back(std::move(o));
         return *this;
     }
 
     // a copy will be created option  /* throws std::bad_alloc */
-    inline auto options::add(const option& o) -> options& {
+    constexpr inline auto options::add(const option& o) -> options& {
         opts_->push_back(o);
         return *this;
     }
 
 
     // unchecked method
-    inline auto options::operator[](const options::count_t n) const noexcept -> std::string_view {
+    constexpr inline auto options::operator[](const options::count_t n) const noexcept
+        -> std::string_view {
         return {raw_->argv[n]};
     }
 
     // unchecked method
-    inline auto options::operator[](std::string_view str) const noexcept -> std::string_view {
+    constexpr inline auto options::operator[](std::string_view str) const noexcept
+        -> std::string_view {
         // TODO: unimplemented
 
         (void)(str);
@@ -292,7 +299,7 @@ namespace cxx20opts {
     }
 
     /* throws std::out_of_range */
-    inline auto options::at(const options::count_t n) const -> std::string_view {
+    constexpr inline auto options::at(const options::count_t n) const -> std::string_view {
         if (not raw_.has_value()) {
             throw std::bad_optional_access{};
         }
@@ -303,7 +310,7 @@ namespace cxx20opts {
     }
 
     /* throws std::out_of_range */
-    inline auto options::at(std::string_view str) const -> std::string_view {
+    constexpr inline auto options::at(std::string_view str) const -> std::string_view {
         // TODO: unimplemented
 
         // throw std::out_of_range("");
@@ -312,10 +319,10 @@ namespace cxx20opts {
         return {"unimplemented"};
     }
 
-    inline auto options::raw() const noexcept -> const raw_args_t& { return raw_; }
+    constexpr inline auto options::raw() const noexcept -> const raw_args_t& { return raw_; }
 
 
-    inline auto options::parse_impl() noexcept -> void {
+    constexpr inline auto options::parse_impl() noexcept -> void {
         // TODO: unimplemented
         if (help_support) {
         }
@@ -328,15 +335,15 @@ namespace cxx20opts {
     }
 
 
-    inline auto options::custom_help_trigger(help_argument_t&& h) noexcept -> options& {
+    constexpr inline auto options::custom_help_trigger(help_argument_t&& h) noexcept -> options& {
         help_string_output = std::move(h);
         return *this;
     }
 
 
-    inline auto options::print_help(std::ostream& os = std::cout) noexcept -> options& {
+    constexpr inline auto options::print_help(std::ostream& os = std::cout) noexcept -> options& {
         // indent three spaces
-        constexpr static std::string_view padding = "   ";
+        constexpr std::string_view padding = "   ";
 
         if (description_) {
             os << description_->name << " ";
@@ -378,7 +385,7 @@ namespace cxx20opts {
         return *this;
     }
 
-    inline auto options::description(program_description_t&& desc) noexcept -> options& {
+    constexpr inline auto options::description(program_description_t&& desc) noexcept -> options& {
         description_ = std::move(desc);
         return *this;
     }
@@ -387,85 +394,89 @@ namespace cxx20opts {
     // more boilerplate...
 
 
-    inline auto options::enable_windows_style_behavior() noexcept -> options& {
+    constexpr inline auto options::enable_windows_style_behavior() noexcept -> options& {
         windows_style_behavior_on = true;
         return *this;
     }
-    inline auto options::disable_windows_style_behavior() noexcept -> options& {
+    constexpr inline auto options::disable_windows_style_behavior() noexcept -> options& {
         windows_style_behavior_on = false;
         return *this;
     }
 
-    inline auto options::enable_help_output() noexcept -> options& {
+    constexpr inline auto options::enable_help_output() noexcept -> options& {
         help_support = true;
         return *this;
     }
-    inline auto options::disable_help_output() noexcept -> options& {
+    constexpr inline auto options::disable_help_output() noexcept -> options& {
         help_support = false;
         return *this;
     }
 
-    inline auto operator|(options& z, options::program_description_t&& desc) noexcept -> options& {
+    constexpr inline auto operator|(options& z, options::program_description_t&& desc) noexcept
+        -> options& {
         z.description(std::move(desc));
         return z;
     }
 
-    inline auto operator|(options& z, options::help_argument_t&& h) noexcept -> options& {
+    constexpr inline auto operator|(options& z, options::help_argument_t&& h) noexcept -> options& {
         z.custom_help_trigger(std::move(h));
         return z;
     }
 
-    inline auto operator|(options& z, option&& o) noexcept -> options& {
+    constexpr inline auto operator|(options& z, option&& o) noexcept -> options& {
         z.add(std::move(o));
         return z;
     }
     // a copy will be created option  /* throws std::bad_alloc */
-    inline auto operator|(options& z, const option& o) -> options& {
+    constexpr inline auto operator|(options& z, const option& o) -> options& {
         z.add(o);
         return z;
     }
 
-    inline auto options::operator()(option&& o) noexcept -> options& {
+    constexpr inline auto options::operator()(option&& o) noexcept -> options& {
         add(std::move(o));
         return *this;
     }
     // a copy will be created option  /* throws std::bad_alloc */
-    inline auto options::operator()(const option& o) -> options& {
+    constexpr inline auto options::operator()(const option& o) -> options& {
         add(o);
         return *this;
     }
 
-    inline auto operator|(options& z, enable_windows_style_behavior_t&&) noexcept -> options& {
+    constexpr inline auto operator|(options& z, enable_windows_style_behavior_t&&) noexcept
+        -> options& {
         z.enable_windows_style_behavior();
         return z;
     }
-    inline auto operator|(options& z, const enable_windows_style_behavior_t&) noexcept -> options& {
+    constexpr inline auto operator|(options& z, const enable_windows_style_behavior_t&) noexcept
+        -> options& {
         z.enable_windows_style_behavior();
         return z;
     }
-    inline auto operator|(options& z, disable_windows_style_behavior_t&&) noexcept -> options& {
+    constexpr inline auto operator|(options& z, disable_windows_style_behavior_t&&) noexcept
+        -> options& {
         z.disable_windows_style_behavior();
         return z;
     }
-    inline auto operator|(options& z, const disable_windows_style_behavior_t&) noexcept
+    constexpr inline auto operator|(options& z, const disable_windows_style_behavior_t&) noexcept
         -> options& {
         z.disable_windows_style_behavior();
         return z;
     }
 
-    inline auto operator|(options& z, enable_help_t&&) noexcept -> options& {
+    constexpr inline auto operator|(options& z, enable_help_t&&) noexcept -> options& {
         z.enable_help_output();
         return z;
     }
-    inline auto operator|(options& z, const enable_help_t&) noexcept -> options& {
+    constexpr inline auto operator|(options& z, const enable_help_t&) noexcept -> options& {
         z.enable_help_output();
         return z;
     }
-    inline auto operator|(options& z, disable_help_t&&) noexcept -> options& {
+    constexpr inline auto operator|(options& z, disable_help_t&&) noexcept -> options& {
         z.disable_help_output();
         return z;
     }
-    inline auto operator|(options& z, const disable_help_t&) noexcept -> options& {
+    constexpr inline auto operator|(options& z, const disable_help_t&) noexcept -> options& {
         z.disable_help_output();
         return z;
     }
