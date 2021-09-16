@@ -64,8 +64,8 @@ void test_get_options(const cxx20opts::options& opts, int argc, char* argv[]) {
     opts["kecasdak"];                          // unchecked UB, out of range, ubsan не ловит
     opts["v"], opts["version"];                // semantically equivalent
     opts.at("K"), opts.at("ADKFJDASKJFADHA");  // throws exception - out of range
-    assert(opts.raw().argc == argc);           // get argc
-    assert(opts.raw().argv == argv);           // get argv
+    assert(opts.raw()->argc == argc);          // get argc
+    assert(opts.raw()->argv == argv);          // get argv
 }
 
 void test_description(cxx20opts::options& opts) {
@@ -73,9 +73,9 @@ void test_description(cxx20opts::options& opts) {
     info << "(${commit_timestamp}, собрано " << __DATE__ << " " << __TIME__ << ")";
 
     opts.description(program_description{
-        .name = executable_name(opts.raw()).string() + " - CXX 20 Opts Test Programm",  //
-        .version = std::string{std::string{"v"} + std::to_string(0.42f)},               //
-        .info = info.str()                                                              //
+        .name = executable_name(opts.raw().value()).string() + " - CXX 20 Opts Test Programm",  //
+        .version = std::string{std::string{"v"} + std::to_string(0.42f)},                       //
+        .info = info.str()                                                                      //
     });
 }
 

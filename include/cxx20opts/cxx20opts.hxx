@@ -103,8 +103,8 @@ namespace cxx20opts {
         using count_t = int;
         using c_array_string_t = char**;
 
-        count_t argc;
-        c_array_string_t argv;
+        const count_t argc;
+        const c_array_string_t argv;
     };
 
     struct program_description {
@@ -149,18 +149,21 @@ namespace cxx20opts {
         constexpr static inline std::size_t number_path_to_exe_in_argv = 0;
 
         /* move this types to template args? Maybe later... */
-        using raw_args_t = raw_args;
+        using raw_args_t = std::optional<raw_args>;
         using count_t = raw_args::count_t;
         using c_array_string_t = raw_args::c_array_string_t;
 
         using help_argument_t = help_argument;
-        using program_description_t = program_description;
-        using opts_t = std::vector<option>;
+        using program_description_t = std::optional<program_description>;
+        using opts_t = std::optional<std::vector<option>>;
 
 
-        options() noexcept {}
-        options(program_description_t&& name) noexcept : description_{std::move(name)} {}
-        options(const count_t argc_, char** argv_) noexcept : raw_{argc_, argv_} { parse_impl(); }
+        constexpr options() noexcept {}
+        constexpr options(program_description_t&& name) noexcept : description_{std::move(name)} {}
+        options(const count_t argc_, char** argv_) noexcept {
+            raw_.emplace(raw_args{argc_, argv_});
+            parse_impl();
+        }
 
         [[maybe_unused]] auto parse(const count_t argc_, char** argv_) noexcept -> options&;
 
@@ -216,10 +219,10 @@ namespace cxx20opts {
         help_argument_t help_string_output{help_default};
 
         // pointers to argc && argv
-        raw_args_t raw_;
+        raw_args_t raw_{std::nullopt};
 
         // dyn array options.
-        opts_t opts_;
+        opts_t opts_{std::nullopt};
 
 
         // Program description, first line in help output, space separeted.
@@ -232,7 +235,7 @@ namespace cxx20opts {
         // version = "8.2"
         // info = "(2019 Dec 12, собрано Mar 29 2021 17:00:35)"
 
-        std::optional<program_description_t> description_{std::nullopt};
+        program_description_t description_{std::nullopt};
 
 
         auto parse_impl() noexcept -> void;
@@ -258,26 +261,26 @@ namespace cxx20opts {
 namespace cxx20opts {
 
     inline auto options::parse(const options::count_t argc_, char** argv_) noexcept -> options& {
-        raw_ = raw_args_t{argc_, argv_};
+        raw_.emplace(raw_args{argc_, argv_});
         parse_impl();
         return *this;
     }
 
     inline auto options::add(option&& o) noexcept -> options& {
-        opts_.emplace_back(std::move(o));
+        opts_->emplace_back(std::move(o));
         return *this;
     }
 
     // a copy will be created option  /* throws std::bad_alloc */
     inline auto options::add(const option& o) -> options& {
-        opts_.push_back(o);
+        opts_->push_back(o);
         return *this;
     }
 
 
     // unchecked method
     inline auto options::operator[](const options::count_t n) const noexcept -> std::string_view {
-        return {raw_.argv[n]};
+        return {raw_->argv[n]};
     }
 
     // unchecked method
@@ -290,10 +293,13 @@ namespace cxx20opts {
 
     /* throws std::out_of_range */
     inline auto options::at(const options::count_t n) const -> std::string_view {
-        if (n > raw_.argc) {
-            throw std::out_of_range("");
+        if (not raw_.has_value()) {
+            throw std::bad_optional_access{};
         }
-        return {raw_.argv[n]};
+        if (n > raw_->argc) {
+            throw std::out_of_range{""};
+        }
+        return {raw_->argv[n]};
     }
 
     /* throws std::out_of_range */
@@ -314,7 +320,7 @@ namespace cxx20opts {
         if (help_support) {
         }
 
-        for (options::count_t i = 0; i < raw_.argc; ++i) {
+        for (options::count_t i = 0; i < raw_->argc; ++i) {
             ;
         }
         if (windows_style_behavior_on) {
@@ -345,7 +351,7 @@ namespace cxx20opts {
 
         }  // end if has description
 
-        for (const auto& i : opts_) {
+        for (const auto& i : *opts_) {
             os << padding;
 
             if (i.short_name) {
