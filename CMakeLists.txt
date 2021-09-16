@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.14)
 
 project(cxx20opts
     VERSION 0.0
@@ -15,10 +15,15 @@ set(${PROJECT_NAME}_HDR
     include/cxx20opts/cxx20opts.hxx
 )
 
+add_custom_target(${PROJECT_NAME}_ SOURCES ${${PROJECT_NAME}_HDR})
 
-add_library(${PROJECT_NAME} INTERFACE ${${PROJECT_NAME}_HDR})
+add_library(${PROJECT_NAME} INTERFACE)
+target_sources(${PROJECT_NAME} INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${${PROJECT_NAME}_HDR}>
+    $<INSTALL_INTERFACE:${${PROJECT_NAME}_HDR}>
+)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-target_include_directories(${PROJECT_NAME} PUBLIC INTERFACE
+target_include_directories(${PROJECT_NAME} INTERFACE
     $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
