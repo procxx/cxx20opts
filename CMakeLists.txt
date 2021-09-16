@@ -15,15 +15,22 @@ set(${PROJECT_NAME}_HDR
     include/cxx20opts/cxx20opts.hxx
 )
 
-add_custom_target(${PROJECT_NAME}_ SOURCES ${${PROJECT_NAME}_HDR})
-source_group(headers FILES ${${PROJECT_NAME}_HDR})
 
-add_library(${PROJECT_NAME} INTERFACE)
+if(${CMAKE_VERSION} VERSION_LESS "3.19.0")
+    add_custom_target(${PROJECT_NAME}_ SOURCES ${${PROJECT_NAME}_HDR})
+    add_library(${PROJECT_NAME} INTERFACE)
+else()
+    add_library(${PROJECT_NAME} INTERFACE ${${PROJECT_NAME}_HDR})
+endif()
+
+source_group(headers FILES ${${PROJECT_NAME}_HDR})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} INTERFACE
     $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+
 
 if(BUILD_TESTS)
     enable_testing()
